@@ -36,3 +36,23 @@ LayerViews:
     layer_in_name: true
     color: "cyan"
     hatch_pattern: hollow
+  LOCOUPON:
+    layer: [120, 0]
+    layer_in_name: true
+    color: "yellow"
+    hatch_pattern: diagcross
+  LOTRENCH:
+    layer: [121, 0]
+    layer_in_name: true
+    color: "gold"
+    hatch_pattern: left-hatch
+  LOENCAPS:
+    layer: [122, 0]
+    layer_in_name: true
+    color: "red"
+    hatch_pattern: right-hatch
+  LTMILANO:
+    layer: [123, 0]
+    layer_in_name: true
+    color: "green"
+    hatch_pattern: zigzag

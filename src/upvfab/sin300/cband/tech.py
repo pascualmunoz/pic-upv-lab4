@@ -31,6 +31,10 @@ from upvfab.sin300.cband.config import PATH
 
 nm = 1e-3
 
+LOCOUPON = (120, 0) # origin wafer - represents the coupon (SiNx)
+LOTRENCH = (121, 0) # origin wafer - represents the trench into the silicon
+LOENCAPS = (122, 0) # origin wafer - represents the photo-resist encapsulation
+LTMILANO = (123, 0) # target wafer - only for the alignment marks
 
 class LayerMapUPVfab(LayerMap):
     """Layer map for UPVfab technology."""
@@ -61,6 +65,11 @@ class LayerMapUPVfab(LayerMap):
     LABEL_SETTINGS: Layer = (100, 0)  # type: ignore
     LABEL_INSTANCE: Layer = (101, 0)  # type: ignore
 
+    WAFER: Layer = (99999, 0)
+    OCOUPON: Layer = LOCOUPON 
+    OTRENCH: Layer = LOTRENCH
+    OENCAPS: Layer = LOENCAPS
+    TMILANO: Layer = LTMILANO
 
 LAYER = LayerMapUPVfab
 
@@ -72,6 +81,14 @@ def get_layer_stack(
     thickness_heater: float = 100 * nm,
     zmin_metal: float = 4.8,
     thickness_metal: float = 100 * nm,
+
+    thickness_ocoupon: float = 2000 * nm,
+    thickness_otrench: float = 3000 * nm,
+    thickness_oencaps: float = 3500 * nm,
+    thickness_tmilano: float = 1500 * nm,
+    thickness_release: float = 500 * nm,
+    thickness_clad: float = 8000 * nm
+
 ) -> LayerStack:
     """Returns LayerStack.
 
@@ -119,6 +136,45 @@ def get_layer_stack(
                 material="CrAu",
                 info={"mesh_order": 2},
             ),
+            coupon=LayerLevel(
+                layer=LAYER.OCOUPON, # Se podría entender como que coupon se patrona con máscara oencaps?
+                thickness=thickness_ocoupon,
+                zmin=thickness_release,
+                material="SiNx",
+            ),
+            encaps=LayerLevel(
+                layer=LAYER.OENCAPS, # Se podría entender como que coupon se patrona con máscara oencaps?
+                thickness=thickness_oencaps,
+                zmin=thickness_release,
+                material="PhotoResist",
+            ),
+            milano=LayerLevel(
+                layer=LAYER.TMILANO,
+                thickness=thickness_tmilano,
+                zmin=thickness_release,
+                material="PhotoResist",
+            ),
+            trench=LayerLevel(
+                layer=LAYER.OTRENCH,
+                thickness=thickness_otrench,
+                zmin=-thickness_otrench,
+                material="Air"
+            ),
+            release=LayerLevel(
+                layer=LAYER.WAFER, # No sería con oencaps?
+                thickness=thickness_release,
+                zmin=0.0,
+                material="SiO2",
+                mesh_order=9, #POR QUÉ LOS OTROS NO TIENEN ORDEN DEFINIDO?
+            ),
+            clad=LayerLevel(
+                layer=LAYER.WAFER,
+                zmin=-thickness_otrench,
+                material="Air",
+                thickness=thickness_clad,
+                mesh_order=10, #POR QUÉ LOS OTROS NO TIENEN ORDEN DEFINIDO?
+            ),
+
         )
     )
 
@@ -144,6 +200,11 @@ class Tech:
 
     gap_strip = 0.60 # TBD : Minimum gap achieved at foundry 
     gap_rib = 0.60 # TBD : Minimum gap achieved at foundry 
+
+    width_ocoupon = 160.0
+    width_oencaps = 160.0 + 20.0
+    width_otrench = 4.0
+    width_tmilano = 4.0
 
 
 TECH = Tech()
@@ -260,6 +321,33 @@ def heater_metal(width=TECH.width_heater) -> CrossSection:
     """Heater cross-section."""
     return gf.cross_section.heater_metal(width=width, layer=LAYER.HEATER)
 
+@xsection
+def cs_ocoupon(width=TECH.width_ocoupon) -> CrossSection:
+    """Origin wafer coupon"""
+    return gf.cross_section.cross_section(
+        width=width,
+        layer=LAYER.OCOUPON)
+
+@xsection
+def cs_oencaps(width=TECH.width_oencaps) -> CrossSection:
+    """Origin wafer coupon encapsulation"""
+    return gf.cross_section.cross_section(
+        width=width,
+        layer=LAYER.OENCAPS)
+    
+@xsection
+def cs_otrench(width=TECH.width_otrench) -> CrossSection:
+    """Origin wafer coupon trench"""
+    return gf.cross_section.cross_section(
+        width=width,
+        layer=LAYER.OTRENCH)
+
+@xsection
+def cs_tmilano(width=TECH.width_tmilano) -> CrossSection:
+    """Target wafer milano holes"""
+    return gf.cross_section.cross_section(
+        width=width,
+        layer=LAYER.TMILANO)
 
 ############################
 # Routing functions
